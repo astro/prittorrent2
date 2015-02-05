@@ -1,0 +1,26 @@
+{
+  "name": "prittorrent",
+  "version": "0.0.0",
+  "description": "BitTorrent publishing pipeline",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/astro/prittorrent.git"
+  },
+  "keywords": [
+    "bittorrent"
+  ],
+  "author": "Astro <astro@spaceboyz.net>",
+  "license": "GPL",
+  "bugs": {
+    "url": "https://github.com/astro/prittorrent/issues"
+  },
+  "dependencies": {
+    "create-torrent": "^3.8.0",
+    "request": "^2.53.0",
+    "run-series": "^1.0.2"
+  }
+}
