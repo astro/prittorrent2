@@ -19,11 +19,17 @@
     "url": "https://github.com/astro/prittorrent/issues"
   },
   "dependencies": {
+    "bittorrent-tracker": "^3.1.1",
     "create-torrent": "^3.8.0",
+    "express": "^4.11.2",
+    "hat": "0.0.3",
+    "level": "^0.18.0",
     "mux": "0.0.2",
     "progress": "^1.1.8",
+    "read-torrent": "^1.2.0",
     "request": "^2.53.0",
     "run-series": "^1.0.2",
+    "sublevel": "^2.4.0",
     "through2": "^0.6.3"
   }
 }

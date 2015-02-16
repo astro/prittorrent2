@@ -1,4 +1,5 @@
 module.exports = {
     hasher: require('./lib/hasher'),
-    // storage: require('./lib/storage')
+    // storage: require('./lib/storage'),
+    Model: require('./lib/model')
 };

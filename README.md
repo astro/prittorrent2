@@ -16,7 +16,7 @@ Parentheses denote optional features.
 
 - [ ] Hasher driven by loop talking to PostgreSQL
 - [ ] HTTP client: writes to disk cache, moves once info_hash is known
-- [ ] Hasher: make Webseeding url-list optional
+- [ ] (Hasher: make Webseeding url-list optional)
 - [ ] Disk cache, Web-seeded
   - [ ] Main knob: disk space to keep free
 - Seeders
@@ -26,12 +26,17 @@ Parentheses denote optional features.
 
 - [ ] Metadata in a DB:
   - [ ] Hashed torrents by this instance/cached
-  - [ ] Stats
-- [ ] Webseed Hasher:
-  - [ ] HTTP API for publishing, serving .torrent files
+  - [ ] (Stats)
+- [x] Webseed Hasher:
+  - [x] HTTP API for publishing, serving .torrent files
+  - [ ] Feed hashed data into disk cache
   - [ ] (HTTP client: SOCKS5 support)
   - [ ] (File-system backed storage?)
-- [ ] Tracker
+- [x] Tracker
+  - [x] Serves local seeders adresses
+- [ ] Seeder
+  - [ ] Disk cache
+  - [ ] (Foreign trackers?)
 
 ## Content Distribution Network
 
@@ -41,7 +46,7 @@ Parentheses denote optional features.
   - [ ] Slave redirector
   - [ ] (Bandwidth limits)
   - [ ] (Fair queueing)
-  - [ ] Built-in tracker
+  - [x] Built-in tracker
   - [ ] E-tag = InfoHash?
   - [ ] (HTTPS support)
   - [ ] (Public Dashboard for a complete Bitlove replacement)

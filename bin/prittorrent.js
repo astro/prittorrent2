@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 
 var path = require('path')
+var os = require('os')
 var TrackerServer = require('bittorrent-tracker').Server
 var express = require('express')
 var readTorrent = require('read-torrent');
 var hat = require('hat')
 
 var PT = require('..')
+
+var IPV4_RE = /^\d+\.\d+\.\d+\.\d+$/
+var IPV6_RE = /^[0-9a-fA-F:]+$/
+var IPV6_LL_RE = /^fe[89ab].:/
 
 if (process.argv.length !== 3) {
     console.error('Pass config.js')
@@ -100,12 +105,36 @@ app.get("/torrent/:infoHash", function(req, res) {
 
 /* Torrent tracker */
 
-var superPeers = [{
-    ip: "127.0.0.1",
-    port: config.seeder.port,
-    'peer id': hat(160)
-}]
+var superPeers = []
+function updateSuperPeers() {
+    var newSuperPeers = []
+    function addAddress(address) {
+        newSuperPeers.push({
+            ip: address,
+            port: config.seeder.port,
+            // TODO: get from seeder
+            'peer id': hat(160)
+        })
+    }
+    var interfaces = os.networkInterfaces()
+    config.seeder.addresses.forEach(function(address) {
+        if (IPV4_RE.test(address) || IPV6_RE.test(address)) {
+            addAddress(address)
+        } else {
+            (interfaces[address] || []).forEach(function(conf) {
+                if (!IPV6_LL_RE.test(conf.address)) {
+                    addAddress(conf.address)
+                }
+            })
+        }
+    })
+    superPeers = newSuperPeers
+}
+updateSuperPeers()
+console.log("My superPeers:", superPeers)
+setInterval(updateSuperPeers, 60 * 1000)
 
+    
 var tracker = new TrackerServer({
   http: false, // we do our own
   udp: true
