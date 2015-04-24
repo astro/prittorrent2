@@ -10,8 +10,8 @@ module.exports.hasher = {
 }
 
 module.exports.seeder = {
-    bind: "::",
     addresses: ["lo", "eth0", "eth1", "eth2", "wlan0"],
+    bind: "::",
     port: 6881
 }
 

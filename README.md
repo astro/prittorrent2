@@ -3,6 +3,7 @@ Prittorrent
 Bithorse
 Btpublish
 Bitcovery
+"CDN-grade BitTorrent"
 
 # Synopsis
 
@@ -36,7 +37,7 @@ Parentheses denote optional features.
   - [x] Serves local seeders adresses
 - [ ] Seeder
   - [ ] Disk cache
-  - [ ] (Foreign trackers?)
+  - [ ] (Foreign trackers? mix into local tracker data?)
 
 ## Content Distribution Network
 

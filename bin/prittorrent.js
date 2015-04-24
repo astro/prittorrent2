@@ -4,8 +4,9 @@ var path = require('path')
 var os = require('os')
 var TrackerServer = require('bittorrent-tracker').Server
 var express = require('express')
-var readTorrent = require('read-torrent');
-var hat = require('hat')
+var bencode = require('bencode')
+var parseTorrent = require('parse-torrent');
+var extend = require('extend.js')
 
 var PT = require('..')
 
@@ -13,6 +14,10 @@ var IPV4_RE = /^\d+\.\d+\.\d+\.\d+$/
 var IPV6_RE = /^[0-9a-fA-F:]+$/
 var IPV6_LL_RE = /^fe[89ab].:/
 
+process.on('uncaughtException', function(e) {
+    console.error(e.stack)
+})
+    
 if (process.argv.length !== 3) {
     console.error('Pass config.js')
     process.exit(1)
@@ -43,6 +48,27 @@ function handleErr(err, res) {
 // * Auth!
 // * Progress updates?
 app.post('/hash', function(req, res) {
+    function hashDone(err, torrent) {
+        function addDone(err) {
+            if (handleErr(err, res)) return
+            
+            res.status(201)
+            res.set('Content-Type', 'application/x-bittorrent')
+            res.set('Location', "/torrent/" + parsed.infoHash)
+            res.end()
+        }
+        
+        if (handleErr(err, res)) return
+
+        var parsed
+        try {
+            parsed = parseTorrent(torrent)
+        } catch (e) {
+            return handleErr(e, res)
+        }
+        model.addTorrentInfo(parsed.infoHash, parsed.infoBuffer, addDone)
+    }
+
     console.log("hash req", req.params, req.query);
     var root = req.query.root
     var files = req.query.file
@@ -72,38 +98,59 @@ app.post('/hash', function(req, res) {
         files: files,
         pieceLength: pieceLength,
         announceList: config.hasher.announceList,
-        callback: function(err, torrent) {
-            if (handleErr(err, res)) return
-
-            readTorrent(torrent, function(err, parsed) {
-                if (handleErr(err, res)) return
-                
-                var infoHash = parsed.infoHash
-                model.addTorrent(infoHash, torrent, function(err) {
-                    if (handleErr(err, res)) return
-                    
-                    res.status(201)
-                    res.set('Content-Type', 'application/x-bittorrent')
-                    res.set('Location', "/torrent/" + infoHash)
-                    res.end()
-                })
-            })
-        }
+        callback: hashDone
     });
 });
 
 app.get("/torrent/:infoHash", function(req, res) {
-    model.getTorrent(req.params.infoHash, function(err, torrent) {
+    function writeTorrent(infoData) {
+        res.write("d")
+        var pairs = {
+            info: infoData,
+            announce: config.hasher.announceList[0][0],
+            'announce-list': config.hasher.announceList,
+            encoding: 'UTF-8'
+        }
+        Object.keys(pairs).sort().forEach(function(key) {
+            res.write(bencode.encode(key))
+            var data = pairs[key]
+            if (!Buffer.isBuffer(data))
+                data = bencode.encode(data)
+            res.write(data)
+        })
+        res.write("e")
+    }
+
+    model.getTorrentInfo(req.params.infoHash, function(err, infoData) {
         if (handleErr(err, res)) return
 
         res.status(200)
         res.set('Content-Type', 'application/x-bittorrent')
-        res.write(torrent)
+        writeTorrent(infoData)
         res.end()
     })
 })
 
-/* Torrent tracker */
+/* Seeder */
+
+var seeder = new PT.Seeder(extend(config.seeder, {
+    getTorrent: function(infoHash, cb) {
+        model.getTorrentInfo(infoHash, function(err, infoData) {
+            if (err) return cb(err)
+
+            var info
+            try {
+                info = bencode.decode(infoData)
+            } catch (e) {
+                err = e
+            }
+            cb(err, info)
+        })
+    }
+}))
+
+
+/* My seeder address for tracker */
 
 var superPeers = []
 function updateSuperPeers() {
@@ -113,7 +160,7 @@ function updateSuperPeers() {
             ip: address,
             port: config.seeder.port,
             // TODO: get from seeder
-            'peer id': hat(160)
+            'peer id': seeder.peerId
         })
     }
     var interfaces = os.networkInterfaces()
@@ -134,6 +181,8 @@ updateSuperPeers()
 console.log("My superPeers:", superPeers)
 setInterval(updateSuperPeers, 60 * 1000)
 
+
+/* Torrent tracker */
     
 var tracker = new TrackerServer({
   http: false, // we do our own
